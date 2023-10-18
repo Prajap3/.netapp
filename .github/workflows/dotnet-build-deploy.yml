@@ -1,0 +1,42 @@
+name: .NET Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '5.0.x' # Replace with your desired .NET version
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --configuration Release
+
+    - name: Publish
+      run: dotnet publish -c Release -o ./publish
+
+  deploy:
+    runs-on: windows-latest
+    needs: build
+    environment: production
+
+    steps:
+    - name: IIS Web App Manage
+      uses: azure/iis-web-app-management@v0.2
+      with:
+        app-path: 'Default Web Site' # Replace with your IIS app path
+        website-name: 'YourWebsiteName' # Replace with your IIS website name
+        package: './publish' # Replace with your build artifact path
+
